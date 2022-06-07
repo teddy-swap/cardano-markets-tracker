@@ -94,11 +94,3 @@ library
                   , hlog
                   , retry
                   , streaming-kafka
-
-executable tracker-app
-    main-is: Main.hs
-    build-depends:  base >= 4.9 && < 5
-                  , tracker
-                  , rio
-    hs-source-dirs:   app
-    default-language: Haskell2010

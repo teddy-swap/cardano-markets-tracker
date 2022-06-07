@@ -78,6 +78,7 @@ library
                      Streaming.Class
                      Streaming.Types
                      Streaming.Events
+                     Streaming.Throw
 
     build-depends:  bytestring
                   , aeson
@@ -91,8 +92,6 @@ library
                   , mtl
                   , dhall==1.38.1
                   , transformers==0.5.6.2
-                  , dhall
-                  , core
                   , quickblue
                   , cardano-tx
                   , dex-core
