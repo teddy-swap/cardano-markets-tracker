@@ -1,6 +1,5 @@
 module Streaming.Events
-  ( ConfirmedOrderEvent(..)
-  , ConfirmedPoolEvent(..)
+  ( ExecutedOrderEvent(..)
   ) where
 
 import Data.Aeson
@@ -19,45 +18,16 @@ import Explorer.Types
 import qualified Data.ByteString.Lazy as BS
 import qualified Data.ByteString      as ByteString
 
-data ConfirmedOrderEvent = ConfirmedOrderEvent
-  { anyOrder :: AnyOrder
-  , txOut    :: FullTxOut
-  , gix      :: Gix
+data ExecutedOrderEvent = ExecutedOrderEvent
+  { stringJson :: ByteString.ByteString
   } deriving (Generic, FromJSON, ToJSON)
 
-instance ToKafka PoolId ConfirmedOrderEvent where
+instance ToKafka String ExecutedOrderEvent where
   toKafka topic k v =
       ProducerRecord topic UnassignedPartition encodedKey encodedValue
     where
       encodedValue = asKey v
       encodedKey   = asKey k
-
-instance FromKafka PoolId ConfirmedOrderEvent where
-  fromKafka consumerRecord =
-      keyMaybe >>= (\key -> valueMaybe <&> (key,))
-    where
-      keyMaybe   = (fromKey $ crKey consumerRecord) :: Maybe PoolId
-      valueMaybe = (fromKey $ crValue consumerRecord) :: Maybe ConfirmedOrderEvent
-
-data ConfirmedPoolEvent = ConfirmedPoolEvent
-  { pool  :: Pool
-  , txOut :: FullTxOut
-  , gix   :: Gix
-  } deriving (Generic, FromJSON, ToJSON, Show)
-
-instance ToKafka PoolId ConfirmedPoolEvent where
-  toKafka topic k v =
-      ProducerRecord topic UnassignedPartition encodedKey encodedValue
-    where
-      encodedValue = asKey v
-      encodedKey   = asKey k
-
-instance FromKafka PoolId ConfirmedPoolEvent where
-  fromKafka consumerRecord =
-      keyMaybe >>= (\key -> valueMaybe <&> (key,))
-    where
-      keyMaybe   = (fromKey $ crKey consumerRecord) :: Maybe PoolId
-      valueMaybe = (fromKey $ crValue consumerRecord) :: Maybe ConfirmedPoolEvent
 
 asKey :: (ToJSON a) => a -> Maybe ByteString.ByteString
 asKey = Just . BS.toStrict . encode
