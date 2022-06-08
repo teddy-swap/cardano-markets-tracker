@@ -1,5 +1,6 @@
 module Streaming.Events
   ( ExecutedOrderEvent(..)
+  , asKey
   ) where
 
 import Data.Aeson

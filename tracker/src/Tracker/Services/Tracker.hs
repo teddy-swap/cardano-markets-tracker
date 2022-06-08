@@ -15,7 +15,7 @@ import Tracker.Caches.Cache
 import Tracker.Models.AppConfig
 
 data TrackerService f = TrackerService
-  { getAllTransactions :: f [CompletedTx]
+  { getAllTransactions :: f ([CompletedTx], Int)
   }
 
 mkTrackerService
@@ -35,13 +35,16 @@ getAllTransactions'
   -> Cache f
   -> Logging f
   -> TrackerSettings
-  -> f [CompletedTx]
+  -> f ([CompletedTx], Int)
 getAllTransactions' Explorer{..} Cache{..} Logging{..} TrackerSettings{..} = do
   _ <- infoM @String "Going to get next tracker iteration."
   lastIndex <- getLastIndex
   Items{..} <- getTxs (Paging lastIndex (naturalToInt limit)) Asc
   _ <- infoM $ "Got next txn batch: " ++ show items
-  let cardanoTxn = fmap toCardanoTx items
-  _ <- infoM $ "Gardano txn are: " ++ show cardanoTxn
-  return cardanoTxn
+  let 
+    cardanoTxn = fmap toCardanoTx items
+    newIndex = total + lastIndex + 1
+  _ <- infoM $ "Gardano txn are: " ++ show cardanoTxn ++ ". New index is: " ++ show newIndex
+  
+  return (cardanoTxn, newIndex)
 

@@ -2,13 +2,25 @@ module Tracker.Programs.TrackerProgram where
 
 import Tracker.Services.Tracker
 import Tracker.Caches.Cache
+import Tracker.Models.AppConfig
+import Tracker.Syntax.Option
 
 import Streaming.Events
 import Streaming.Producer
 import Streaming.Types
 
+import ErgoDex.Index.ExecutedOrder
+import ErgoDex.Class
+
+import CardanoTx.Models
+
+import System.Logging.Hlog
+import GHC.Natural
 import qualified Streamly.Prelude as S
 import           RIO
+import           Control.Monad.Catch
+import qualified Data.ByteString.Lazy as BS
+import Data.Aeson
 
 data TrackerProgram f = TrackerProgram
   { run :: f ()
@@ -18,42 +30,59 @@ mkTrackerProgram
   :: (Monad i, S.MonadAsync f, MonadCatch f)
   => TrackerProgrammConfig
   -> MakeLogging i f
-  -> Tracker f
+  -> Cache f
+  -> TrackerService f
   -> Producer f String ExecutedOrderEvent
   -> i (TrackerProgram f)
-mkTrackerProgram settings MakeLogging{..} explorer orderProd poolProd = do
+mkTrackerProgram settings MakeLogging{..} cache tracker producer = do
   logger <- forComponent "trackerProgram"
-  pure $ TrackerProgram $ run' settings logger explorer orderProd poolProd
+  pure $ TrackerProgram $ run' settings logger cache tracker producer
 
 run'
   :: (S.MonadAsync f, MonadCatch f)
   => TrackerProgrammConfig
   -> Logging f
-  -> Tracker f
+  -> Cache f
+  -> TrackerService f
   -> Producer f String ExecutedOrderEvent
   -> f ()
-run' TrackerProgrammConfig{..} logging@Logging{..} explorer orderProd poolProd =
-    S.repeatM (process explorer logging orderProd poolProd)
-  & S.delay (fromIntegral $ Natural.naturalToInt pollTime)
+run' TrackerProgrammConfig{..} logging@Logging{..} cache service producer =
+    S.repeatM (process service cache logging producer)
+  & S.delay (fromIntegral $ naturalToInt pollTime)
   & S.handle (\(a :: SomeException) -> (lift . errorM $ ("tracker stream error: " ++ (show a)))) -- log.info here
   & S.drain
 
 process
   :: (Monad f)
-  => Tracker f
+  => TrackerService f
   -> Cache f
   -> Logging f
   -> Producer f String ExecutedOrderEvent
   -> f ()
-process Tracker{..} Cache{..} Logging{..} producer = do
-  transactions <- getAllTransactions
+process TrackerService{..} Cache{..} Logging{..} producer = do
+  (transactions, index) <- getAllTransactions
   let
     events =
         executedSwaps ++ executedDeposits ++ executedRedeems
       where
-        executedSwaps    = ExecutedOrderEvent $ asKey $ parseFromExplorer transactions :: [ExecutedSwap]
-        executedDeposits = ExecutedOrderEvent $ asKey $ parseFromExplorer transactions :: [ExecutedDeposit]
-        executedRedeems  = ExecutedOrderEvent $ asKey $ parseFromExplorer transactions :: [ExecutedRedeem]
+        executedSwaps    = processExecutedOrder @ExecutedSwap  transactions
+        executedDeposits = processExecutedOrder @ExecutedDeposit transactions
+        executedRedeems  = processExecutedOrder @ExecutedRedeem transactions
   _ <- infoM $ "Events are: "  ++ (show (length events))
   _ <- unless (null events) (produce producer (S.fromList events))
-  
+  putLastIndex index
+
+constantKafkaKey :: String
+constantKafkaKey = "kafka_key"
+
+processExecutedOrder :: forall b. (FromExplorer CompletedTx b, ToJSON b) => [CompletedTx] -> [(String, ExecutedOrderEvent)]
+processExecutedOrder inputs =
+  let 
+    ordersMaybe = 
+      fmap (\elem ->
+        case parseFromExplorer elem :: Maybe b of
+          Just order -> Just $ (constantKafkaKey, ExecutedOrderEvent $ BS.toStrict $ encode order)
+          _          -> Nothing
+        ) inputs
+  in unNone [] ordersMaybe
+    

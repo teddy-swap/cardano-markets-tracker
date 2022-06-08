@@ -2,6 +2,9 @@ module Tracker.Models.AppConfig where
 
 import Dhall
 import RIO
+import Explorer.Config
+import System.Logging.Hlog
+import Streaming.Config
 
 data RedisSettings = RedisSettings
   { redisHost :: String
@@ -21,3 +24,15 @@ data TrackerProgrammConfig = TrackerProgrammConfig
    } deriving (Generic)
 
 instance FromDhall TrackerProgrammConfig
+
+data AppConfig = AppConfig
+  { explorerConfig        :: ExplorerConfig
+  , ordersProducerConfig  :: KafkaProducerConfig
+  , ordersTopicName       :: Text
+  , trackerProgrammConfig :: TrackerProgrammConfig
+  , trackerSettings       :: TrackerSettings
+  , redisSettings         :: RedisSettings
+  , loggingConfig         :: LoggingConfig
+  } deriving (Generic)
+
+instance FromDhall AppConfig
