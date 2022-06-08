@@ -43,7 +43,7 @@ getAllTransactions' Explorer{..} Cache{..} Logging{..} TrackerSettings{..} = do
   _ <- infoM $ "Got next txn batch: " ++ show items
   let 
     cardanoTxn = fmap toCardanoTx items
-    newIndex = total + lastIndex + 1
+    newIndex = (length items) + lastIndex + 1
   _ <- infoM $ "Gardano txn are: " ++ show cardanoTxn ++ ". New index is: " ++ show newIndex
   
   return (cardanoTxn, newIndex)
