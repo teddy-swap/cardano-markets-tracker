@@ -12,4 +12,4 @@ execWithRetry
   -> f (a)
   -> f (a)
 execWithRetry Logging{..} logMsg func = do
-  recoverAll (constantDelay 1000000) (\_ -> (infoM @String logMsg) >> func)
+  recoverAll (constantDelay 1000000) (\rs -> (infoM $ logMsg ++ show rs) >> func)

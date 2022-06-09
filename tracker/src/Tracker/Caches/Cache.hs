@@ -26,6 +26,12 @@ mkCache settings =
   where
     connectionF = mkConnection settings
 
+constantDefaultIndex :: Int
+constantDefaultIndex = 0
+
+constantKey :: ByteString
+constantKey = "tracker_executed_ops_min_index"
+
 mkConnection
   :: (MonadIO i, MonadResource i) 
   => RedisSettings
@@ -43,20 +49,20 @@ putLastIndex'
   -> f ()
 putLastIndex' conn index =
   void $ liftIO $ runRedis conn $ do
-    Redis.set "tracker_executed_ops_min_index" (BSU.fromString $ show index)
+    Redis.set constantKey (BSU.fromString $ show index)
 
 getLastIndex'
   :: (MonadIO f)
   => Connection
   -> f Int
 getLastIndex' conn = liftIO $ do
-  res <- runRedis conn $ Redis.get "tracker_executed_ops_min_index"
+  res <- runRedis conn $ Redis.get constantKey
   let 
     actualIndex =
       case res of
         Right value ->
           case value of
             Just bs -> read $ BSU.toString bs :: Int
-            _       -> 0
-        Left err -> 0
+            _       -> constantDefaultIndex
+        Left err -> constantDefaultIndex
   pure actualIndex
