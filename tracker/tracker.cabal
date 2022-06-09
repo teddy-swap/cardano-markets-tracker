@@ -81,6 +81,7 @@ library
                      Tracker.Syntax.Option
                      Tracker.Services.ConfigReader
                      Tracker.App
+                     Tracker.Syntax.Retry
 
     build-depends:  hashable        == 1.3.0.0
                   , dex-core        == 0.1.0.0
