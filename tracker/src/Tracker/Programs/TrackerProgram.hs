@@ -9,8 +9,10 @@ import Streaming.Events
 import Streaming.Producer
 import Streaming.Types
 
-import ErgoDex.Index.ExecutedOrder
+import Tracker.Models.ExecutedOrders
 import ErgoDex.Class
+
+import Explorer.Class
 
 import CardanoTx.Models
 
@@ -75,7 +77,7 @@ process TrackerService{..} Cache{..} Logging{..} producer = do
 constantKafkaKey :: String
 constantKafkaKey = "kafka_key"
 
-processExecutedOrder :: forall b. (FromExplorer CompletedTx b, ToJSON b) => [CompletedTx] -> [(String, ExecutedOrderEvent)]
+processExecutedOrder :: forall b. (FromExplorer SettledTx b, ToJSON b) => [SettledTx] -> [(String, ExecutedOrderEvent)]
 processExecutedOrder inputs =
   let 
     ordersMaybe = 

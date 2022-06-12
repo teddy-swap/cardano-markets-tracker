@@ -18,7 +18,7 @@ import Tracker.Caches.Cache
 import Tracker.Models.AppConfig
 
 data TrackerService f = TrackerService
-  { getAllTransactions :: f ([CompletedTx], Int)
+  { getAllTransactions :: f ([SettledTx], Int)
   }
 
 mkTrackerService
@@ -38,7 +38,7 @@ getAllTransactions'
   -> Cache f
   -> Logging f
   -> TrackerSettings
-  -> f ([CompletedTx], Int)
+  -> f ([SettledTx], Int)
 getAllTransactions' Explorer{..} Cache{..} l@Logging{..} TrackerSettings{..} = do
   _ <- infoM @String "Going to get next tracker iteration."
   lastIndex <- getLastIndex
