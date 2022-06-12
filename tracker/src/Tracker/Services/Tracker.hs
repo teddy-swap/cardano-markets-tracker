@@ -9,6 +9,7 @@ import Explorer.Types
 
 import System.Logging.Hlog
 import RIO
+import RIO.List
 import GHC.Natural
 import Control.Retry
 import Control.Monad.Catch
@@ -16,6 +17,7 @@ import Control.Monad.Catch
 import Tracker.Syntax.Retry
 import Tracker.Caches.Cache
 import Tracker.Models.AppConfig
+import Tracker.Models.SettledTx
 
 data TrackerService f = TrackerService
   { getAllTransactions :: f ([SettledTx], Int)
@@ -47,8 +49,8 @@ getAllTransactions' Explorer{..} Cache{..} l@Logging{..} TrackerSettings{..} ret
   Items{..} <- execWithRetry l retry "Retrying getTxn." (getTxs (Paging lastIndex (naturalToInt limit)) Asc)
   _ <- infoM $ "Got next txn batch: " ++ (show $ length items)
   let 
-    cardanoTxn = fmap toCardanoTx items
-    newIndex = (length items) + lastIndex + 1
+    cardanoTxn = fmap mkFromExplorer items
+    newIndex = fromMaybe lastIndex (fmap (\FullTx{..} -> (fromInteger $ unGix globalIndex) + 1) (lastMaybe items))
   _ <- infoM $ "New index is: " ++ show newIndex
   
   return (cardanoTxn, newIndex)

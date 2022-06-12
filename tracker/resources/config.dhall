@@ -4,7 +4,7 @@ let fileHandlers = \(path : Text) -> \(level : LogLevel) -> {_1 = path, _2 = lev
 let levelOverride = \(component : Text) -> \(level : LogLevel) -> {_1 = component, _2 = level}
 in
 { explorerConfig =
-    { explorerUri = "https://testnet-api.quickblue.io"
+    { explorerUri = "http://localhost:8084"
     },
   ordersProducerConfig =
     { producerBrokers = ["127.0.0.1:9092"]
@@ -12,7 +12,7 @@ in
     },
   ordersTopicName = "orders-topic",
   trackerProgrammConfig =
-    { pollTime = 10
+    { pollTime = 2
     },
   redisSettings =
     { redisHost = "0.0.0.0"

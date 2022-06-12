@@ -11,6 +11,8 @@ import Explorer.Class
 
 import CardanoTx.Models
 
+import Tracker.Models.SettledTx
+
 import           Data.Aeson (FromJSON, ToJSON)
 import qualified PlutusTx.Prelude as P    
 import           Ledger           

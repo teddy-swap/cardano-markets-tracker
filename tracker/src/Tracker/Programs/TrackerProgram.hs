@@ -4,12 +4,13 @@ import Tracker.Services.Tracker
 import Tracker.Caches.Cache
 import Tracker.Models.AppConfig
 import Tracker.Syntax.Option
+import Tracker.Models.ExecutedOrders
+import Tracker.Models.SettledTx
 
 import Streaming.Events
 import Streaming.Producer
 import Streaming.Types
 
-import Tracker.Models.ExecutedOrders
 import ErgoDex.Class
 
 import Explorer.Class

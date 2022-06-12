@@ -84,6 +84,7 @@ library
                      Tracker.App
                      Tracker.Syntax.Retry
                      Tracker.Models.ExecutedOrders
+                     Tracker.Models.SettledTx
 
     build-depends:  hashable        == 1.3.0.0
                   , dex-core        == 0.1.0.0
