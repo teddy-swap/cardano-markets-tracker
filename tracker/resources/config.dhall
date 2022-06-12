@@ -4,7 +4,7 @@ let fileHandlers = \(path : Text) -> \(level : LogLevel) -> {_1 = path, _2 = lev
 let levelOverride = \(component : Text) -> \(level : LogLevel) -> {_1 = component, _2 = level}
 in
 { explorerConfig =
-    { explorerUri = "http://127.0.0.1:8084"
+    { explorerUri = "https://testnet-api.quickblue.io"
     },
   ordersProducerConfig =
     { producerBrokers = ["127.0.0.1:9092"]
@@ -20,6 +20,9 @@ in
     },
   trackerSettings =
     { limit = 10
+    },
+  retry =
+    { sleepTime = 1000000
     },
   loggingConfig =
     { fileHandlers = [fileHandlers "./logs/tracker.log" LogLevel.Info]

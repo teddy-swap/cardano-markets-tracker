@@ -20,11 +20,30 @@ data Cache f = Cache
 mkCache
   :: (MonadIO i, MonadResource i, MonadIO f) 
   => RedisSettings
+  -> MakeLogging i f
   -> i (Cache f)
-mkCache settings =
-    fmap (\connection -> Cache  (getLastIndex' connection) (putLastIndex' connection)) connectionF
-  where
-    connectionF = mkConnection settings
+mkCache settings MakeLogging{..} = do
+  logging    <- forComponent "TrackerRepository"
+  connection <- mkConnection settings
+  pure $ attachTracing logging Cache
+    { getLastIndex = getLastIndex' connection
+    , putLastIndex = putLastIndex' connection
+    }
+
+attachTracing :: Monad f => Logging f -> Cache f -> Cache f
+attachTracing Logging{..} Cache{..} =
+  Cache
+    { getLastIndex = do
+        debugM @String "Exec getLastIndex"
+        r <- getLastIndex
+        debugM $ "Result of getLastIndex is: " <> show r
+        pure r
+    , putLastIndex = \index -> do
+        debugM $ "Exec putLastIndex with new index: " <> show index
+        r <- putLastIndex index
+        debugM $ "Finished successfully putLastIndex for index: " <> show index
+        pure r
+    }
 
 constantDefaultIndex :: Int
 constantDefaultIndex = 0

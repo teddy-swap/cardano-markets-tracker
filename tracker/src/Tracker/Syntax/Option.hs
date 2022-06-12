@@ -4,9 +4,10 @@ module Tracker.Syntax.Option
 
 import RIO
 
-unNone :: [a] -> [Maybe a] -> [a]
-unNone acc (x:xs) =
-  case x of 
-    Just x1 -> unNone (x1:acc) xs
-    _       -> unNone acc xs 
-unNone acc [] = acc
+unNone :: [Maybe a] -> [a]
+unNone elems =
+  foldr (\x acc -> 
+    case x of
+      Just x1 -> x1:acc
+      _       -> acc
+    ) [] elems

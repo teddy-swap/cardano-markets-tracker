@@ -20,10 +20,16 @@ data TrackerSettings = TrackerSettings
 instance FromDhall TrackerSettings
 
 data TrackerProgrammConfig = TrackerProgrammConfig
-   { pollTime :: Natural
-   } deriving (Generic)
+  { pollTime :: Natural
+  } deriving (Generic)
 
 instance FromDhall TrackerProgrammConfig
+
+data RetryConfig = RetryConfig
+  { sleepTime :: Natural
+  } deriving (Generic)
+
+instance FromDhall RetryConfig
 
 data AppConfig = AppConfig
   { explorerConfig        :: ExplorerConfig
@@ -32,6 +38,7 @@ data AppConfig = AppConfig
   , trackerProgrammConfig :: TrackerProgrammConfig
   , trackerSettings       :: TrackerSettings
   , redisSettings         :: RedisSettings
+  , retry                 :: RetryConfig
   , loggingConfig         :: LoggingConfig
   } deriving (Generic)
 

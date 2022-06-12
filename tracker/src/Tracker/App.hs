@@ -32,9 +32,9 @@ wire = runResourceT $ do
   AppConfig {..}   <- lift $ read mkConfigReader
   loggingMaker     <- makeLogging loggingConfig
   ordersProducer   <- mkKafkaProducer ordersProducerConfig (TopicName ordersTopicName)
-  trackerCache     <- mkCache redisSettings
+  trackerCache     <- mkCache redisSettings loggingMaker
   let
     explorer        = mkExplorer explorerConfig
-  trackerService  <- mkTrackerService trackerSettings loggingMaker trackerCache explorer
+  trackerService  <- mkTrackerService trackerSettings retry loggingMaker trackerCache explorer
   trackerProgramm <- mkTrackerProgram trackerProgrammConfig loggingMaker trackerCache trackerService ordersProducer
   lift $ run trackerProgramm

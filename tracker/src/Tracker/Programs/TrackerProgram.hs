@@ -86,5 +86,5 @@ processExecutedOrder inputs =
           Just order -> Just $ (constantKafkaKey, ExecutedOrderEvent $ BS.toStrict $ encode order)
           _          -> Nothing
         ) inputs
-  in unNone [] ordersMaybe
+  in unNone ordersMaybe
     

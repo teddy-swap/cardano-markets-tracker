@@ -24,13 +24,14 @@ data TrackerService f = TrackerService
 mkTrackerService
   :: (Monad i, MonadIO f, MonadMask f)
   => TrackerSettings
+  -> RetryConfig
   -> MakeLogging i f
   -> Cache f
   -> Explorer f
   -> i (TrackerService f)
-mkTrackerService settings MakeLogging{..} cache explorer = do
+mkTrackerService settings retry MakeLogging{..} cache explorer = do
   logger <- forComponent "trackerService"
-  pure $ TrackerService $ getAllTransactions' explorer cache logger settings  
+  pure $ TrackerService $ getAllTransactions' explorer cache logger settings retry
 
 getAllTransactions' 
   :: (MonadIO f, MonadMask f) 
@@ -38,11 +39,12 @@ getAllTransactions'
   -> Cache f
   -> Logging f
   -> TrackerSettings
+  -> RetryConfig
   -> f ([SettledTx], Int)
-getAllTransactions' Explorer{..} Cache{..} l@Logging{..} TrackerSettings{..} = do
+getAllTransactions' Explorer{..} Cache{..} l@Logging{..} TrackerSettings{..} retry = do
   _ <- infoM @String "Going to get next tracker iteration."
   lastIndex <- getLastIndex
-  Items{..} <- execWithRetry l "Retrying getTxn." (getTxs (Paging lastIndex (naturalToInt limit)) Asc)
+  Items{..} <- execWithRetry l retry "Retrying getTxn." (getTxs (Paging lastIndex (naturalToInt limit)) Asc)
   _ <- infoM $ "Got next txn batch: " ++ (show $ length items)
   let 
     cardanoTxn = fmap toCardanoTx items
