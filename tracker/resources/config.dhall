@@ -19,7 +19,7 @@ in
     , redisPort = "6379"
     },
   trackerSettings =
-    { limit = 10
+    { limit = 100
     },
   retry =
     { sleepTime = 1000000

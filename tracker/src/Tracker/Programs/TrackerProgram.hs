@@ -22,7 +22,7 @@ import GHC.Natural
 import qualified Streamly.Prelude as S
 import           RIO
 import           Control.Monad.Catch
-import qualified Data.ByteString.Lazy as BS
+import qualified Data.ByteString.Lazy.Char8 as C
 import Data.Aeson
 
 data TrackerProgram f = TrackerProgram
@@ -84,7 +84,7 @@ processExecutedOrder inputs =
     ordersMaybe = 
       fmap (\elem ->
         case parseFromExplorer elem :: Maybe b of
-          Just order -> Just $ (constantKafkaKey, ExecutedOrderEvent $ BS.toStrict $ encode order)
+          Just order -> Just $ (constantKafkaKey, ExecutedOrderEvent $ C.unpack $ encode order)
           _          -> Nothing
         ) inputs
   in unNone ordersMaybe

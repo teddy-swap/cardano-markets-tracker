@@ -11,7 +11,10 @@ import Explorer.Class
 
 import CardanoTx.Models
 
-import Tracker.Models.SettledTx
+import           Tracker.Models.SettledTx
+import qualified Tracker.Models.Interop.Orders as Interop
+import           Tracker.Models.Interop.Class
+import           Tracker.Models.Interop.Wrappers 
 
 import           Data.Aeson (FromJSON, ToJSON)
 import qualified PlutusTx.Prelude as P    
@@ -28,7 +31,7 @@ data ExecutedOrder a = ExecutedOrder
   } deriving (Show, Eq, Generic, FromJSON, ToJSON)
 
 data ExecutedSwap = ExecutedSwap
-  { order       :: ExecutedOrder Swap
+  { swap        :: ExecutedOrder Interop.Swap
   , actualQuote :: Amount Quote
   } deriving (Show, Eq, Generic, FromJSON, ToJSON)
 
@@ -39,23 +42,34 @@ instance FromExplorer SettledTx ExecutedSwap where
     (OnChain currPool _)            <- findMatchedOutput @Pool outputs
     userOutput                      <- findUserOutput swapRewardPkh swapRewardSPkh outputs
     let
-      quote = amountOf (fullTxOutValue userOutput) swapQuote
+      quote    = amountOf (fullTxOutValue userOutput) swapQuote
+      execSwap = Interop.Swap
+        { poolId      = wrap swapPoolId
+        , baseIn      = swapBaseIn
+        , minQuoteOut = swapMinQuoteOut
+        , base        = wrap swapBase
+        , quote       = wrap swapQuote
+        , exFee       = swapExFee
+        , rewardPkh   = swapRewardPkh
+        , rewardSPkh  = swapRewardSPkh
+        }
       order = ExecutedOrder
-        { config = swap
+        { config       = execSwap
         , orderInputId = fullTxOutRef swapOut
         , userOutputId = fullTxOutRef userOutput
         , poolOutputId = fullTxOutRef currPool
         , poolInputId  = fullTxOutRef prevPool
+
         }
     return 
       ExecutedSwap
-        { order       = order
+        { swap        = order
         , actualQuote = quote
         }
 
 data ExecutedDeposit = ExecutedDeposit
-  { order    :: ExecutedOrder Deposit
-  , rewardLq :: AssetAmount Liquidity
+  { deposit  :: ExecutedOrder Interop.Deposit
+  , rewardLq :: AssetAmountWrapper
   } deriving (Show, Eq, Generic, FromJSON, ToJSON)
 
 instance FromExplorer SettledTx ExecutedDeposit where
@@ -65,9 +79,18 @@ instance FromExplorer SettledTx ExecutedDeposit where
     (OnChain currPool _)                     <- findMatchedOutput @Pool outputs
     userOutput                               <- findUserOutput depositRewardPkh depositRewardSPkh outputs
     let
-      lqReward = assetAmountOfCoin (fullTxOutValue userOutput) poolCoinLq
+      lqReward    = wrap $ assetAmountOfCoin (fullTxOutValue userOutput) poolCoinLq
+      execDeposit = Interop.Deposit
+        { poolId        = wrap depositPoolId
+        , x             = wrap $ RIO.fst depositPair 
+        , y             = wrap $ RIO.snd depositPair 
+        , exFee         = depositExFee
+        , rewardPkh     = depositRewardPkh
+        , rewardSPkh    = depositRewardSPkh
+        , adaCollateral = adaCollateral
+        }
       order = ExecutedOrder
-        { config = deposit
+        { config       = execDeposit
         , orderInputId = fullTxOutRef depositOut
         , userOutputId = fullTxOutRef userOutput
         , poolOutputId = fullTxOutRef currPool
@@ -75,14 +98,14 @@ instance FromExplorer SettledTx ExecutedDeposit where
         }
     return 
       ExecutedDeposit
-        { order    = order
+        { deposit  = order
         , rewardLq = lqReward
         }
 
 data ExecutedRedeem = ExecutedRedeem
-  { order   :: ExecutedOrder Redeem
-  , rewardX :: AssetAmount X
-  , rewardY :: AssetAmount Y
+  { redeem  :: ExecutedOrder Interop.Redeem
+  , rewardX :: AssetAmountWrapper
+  , rewardY :: AssetAmountWrapper
   } deriving (Show, Eq, Generic, FromJSON, ToJSON)
 
 instance FromExplorer SettledTx ExecutedRedeem where
@@ -92,10 +115,18 @@ instance FromExplorer SettledTx ExecutedRedeem where
     (OnChain currPool _)                  <- findMatchedOutput @Pool outputs
     userOutput                            <- findUserOutput redeemRewardPkh redeemRewardSPkh outputs
     let
-      assetAmountX = assetAmountOfCoin (fullTxOutValue userOutput) poolCoinX
-      assetAmountY = assetAmountOfCoin (fullTxOutValue userOutput) poolCoinY
+      assetAmountX = wrap $ assetAmountOfCoin (fullTxOutValue userOutput) poolCoinX
+      assetAmountY = wrap $ assetAmountOfCoin (fullTxOutValue userOutput) poolCoinY
+      execRedeem   = Interop.Redeem
+        { poolId     = wrap redeemPoolId
+        , lqIn       = redeemLqIn
+        , lq         = wrap redeemLq
+        , exFee      = redeemExFee
+        , rewardPkh  = redeemRewardPkh
+        , rewardSPkh = redeemRewardSPkh
+        }
       order = ExecutedOrder
-        { config = redeem
+        { config       = execRedeem
         , orderInputId = fullTxOutRef redeemOut
         , userOutputId = fullTxOutRef userOutput
         , poolOutputId = fullTxOutRef currPool
@@ -103,7 +134,7 @@ instance FromExplorer SettledTx ExecutedRedeem where
         }
     return 
       ExecutedRedeem
-        { order   = order
+        { redeem  = order
         , rewardX = assetAmountX
         , rewardY = assetAmountY
         }

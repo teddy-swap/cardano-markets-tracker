@@ -20,7 +20,7 @@ import qualified Data.ByteString.Lazy as BS
 import qualified Data.ByteString      as ByteString
 
 data ExecutedOrderEvent = ExecutedOrderEvent
-  { stringJson :: ByteString.ByteString
+  { stringJson :: String
   } deriving (Generic, FromJSON, ToJSON)
 
 instance ToKafka String ExecutedOrderEvent where
