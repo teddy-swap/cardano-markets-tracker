@@ -34,9 +34,9 @@ data ExecutedSwap = ExecutedSwap
 
 instance FromExplorer SettledTx ExecutedSwap where
   parseFromExplorer SettledTx{..} = do
-    (OnChain swapOut swap@Swap{..}) <- findMatchedInput inputs :: Maybe (OnChain Swap)
-    (OnChain prevPool _)            <- findMatchedInput inputs :: Maybe (OnChain Pool)
-    (OnChain currPool _)            <- findMatchedOutput outputs :: Maybe (OnChain Pool)
+    (OnChain swapOut swap@Swap{..}) <- findMatchedInput @Swap inputs
+    (OnChain prevPool _)            <- findMatchedInput @Pool inputs
+    (OnChain currPool _)            <- findMatchedOutput @Pool outputs
     userOutput                      <- findUserOutput swapRewardPkh swapRewardSPkh outputs
     let
       quote = amountOf (fullTxOutValue userOutput) swapQuote
@@ -60,9 +60,9 @@ data ExecutedDeposit = ExecutedDeposit
 
 instance FromExplorer SettledTx ExecutedDeposit where
   parseFromExplorer SettledTx{..} = do
-    (OnChain depositOut deposit@Deposit{..}) <- findMatchedInput inputs :: Maybe (OnChain Deposit)
-    (OnChain prevPool Pool{..})              <- findMatchedInput inputs :: Maybe (OnChain Pool)
-    (OnChain currPool _)                     <- findMatchedOutput outputs :: Maybe (OnChain Pool)
+    (OnChain depositOut deposit@Deposit{..}) <- findMatchedInput @Deposit inputs
+    (OnChain prevPool Pool{..})              <- findMatchedInput @Pool inputs
+    (OnChain currPool _)                     <- findMatchedOutput @Pool outputs
     userOutput                               <- findUserOutput depositRewardPkh depositRewardSPkh outputs
     let
       lqReward = assetAmountOfCoin (fullTxOutValue userOutput) poolCoinLq
@@ -87,9 +87,9 @@ data ExecutedRedeem = ExecutedRedeem
 
 instance FromExplorer SettledTx ExecutedRedeem where
   parseFromExplorer SettledTx{..} = do
-    (OnChain redeemOut redeem@Redeem{..}) <- findMatchedInput inputs :: Maybe (OnChain Redeem)
-    (OnChain prevPool Pool{..})           <- findMatchedInput inputs :: Maybe (OnChain Pool)
-    (OnChain currPool _)                  <- findMatchedOutput outputs :: Maybe (OnChain Pool)
+    (OnChain redeemOut redeem@Redeem{..}) <- findMatchedInput @Redeem inputs
+    (OnChain prevPool Pool{..})           <- findMatchedInput @Pool inputs
+    (OnChain currPool _)                  <- findMatchedOutput @Pool outputs
     userOutput                            <- findUserOutput redeemRewardPkh redeemRewardSPkh outputs
     let
       assetAmountX = assetAmountOfCoin (fullTxOutValue userOutput) poolCoinX
