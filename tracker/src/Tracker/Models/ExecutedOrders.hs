@@ -28,6 +28,7 @@ data ExecutedOrder a = ExecutedOrder
   , userOutputId :: TxOutRef
   , poolOutputId :: TxOutRef
   , poolInputId  :: TxOutRef
+  , timestamp    :: Integer
   } deriving (Show, Eq, Generic, FromJSON, ToJSON)
 
 data ExecutedSwap = ExecutedSwap
@@ -59,7 +60,7 @@ instance FromExplorer SettledTx ExecutedSwap where
         , userOutputId = fullTxOutRef userOutput
         , poolOutputId = fullTxOutRef currPool
         , poolInputId  = fullTxOutRef prevPool
-
+        , timestamp    = timestamp
         }
     return 
       ExecutedSwap
@@ -95,6 +96,7 @@ instance FromExplorer SettledTx ExecutedDeposit where
         , userOutputId = fullTxOutRef userOutput
         , poolOutputId = fullTxOutRef currPool
         , poolInputId  = fullTxOutRef prevPool
+        , timestamp    = timestamp
         }
     return 
       ExecutedDeposit
@@ -131,6 +133,7 @@ instance FromExplorer SettledTx ExecutedRedeem where
         , userOutputId = fullTxOutRef userOutput
         , poolOutputId = fullTxOutRef currPool
         , poolInputId  = fullTxOutRef prevPool
+        , timestamp    = timestamp
         }
     return 
       ExecutedRedeem
