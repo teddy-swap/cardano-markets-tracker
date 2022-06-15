@@ -6,12 +6,17 @@ import Tracker.Models.AppConfig
 import Tracker.Syntax.Option
 import Tracker.Models.ExecutedOrders
 import Tracker.Models.SettledTx
+import qualified Tracker.Models.Interop.Pool as Interop
+import Tracker.Models.Events.ExecutedOrderEvent
+import Tracker.Models.Events.PoolEvent
+import Tracker.Models.Interop.Class
 
-import Streaming.Events
 import Streaming.Producer
 import Streaming.Types
 
 import ErgoDex.Class
+import ErgoDex.Amm.Pool
+import ErgoDex.State
 
 import Explorer.Class
 
@@ -36,10 +41,11 @@ mkTrackerProgram
   -> Cache f
   -> TrackerService f
   -> Producer f String ExecutedOrderEvent
+  -> Producer f String PoolEvent
   -> i (TrackerProgram f)
-mkTrackerProgram settings MakeLogging{..} cache tracker producer = do
+mkTrackerProgram settings MakeLogging{..} cache tracker executedOrdersProducer poolsProducer = do
   logger <- forComponent "trackerProgram"
-  pure $ TrackerProgram $ run' settings logger cache tracker producer
+  pure $ TrackerProgram $ run' settings logger cache tracker executedOrdersProducer poolsProducer
 
 run'
   :: (S.MonadAsync f, MonadCatch f)
@@ -48,9 +54,10 @@ run'
   -> Cache f
   -> TrackerService f
   -> Producer f String ExecutedOrderEvent
+  -> Producer f String PoolEvent
   -> f ()
-run' TrackerProgrammConfig{..} logging@Logging{..} cache service producer =
-    S.repeatM (process service cache logging producer)
+run' TrackerProgrammConfig{..} logging@Logging{..} cache service executedOrdersProducer poolsProducer =
+    S.repeatM (process service cache logging executedOrdersProducer poolsProducer)
   & S.delay (fromIntegral $ naturalToInt pollTime)
   & S.handle (\(a :: SomeException) -> (lift . errorM $ ("tracker stream error: " ++ (show a)))) -- log.info here
   & S.drain
@@ -61,8 +68,9 @@ process
   -> Cache f
   -> Logging f
   -> Producer f String ExecutedOrderEvent
+  -> Producer f String PoolEvent
   -> f ()
-process TrackerService{..} Cache{..} Logging{..} producer = do
+process TrackerService{..} Cache{..} Logging{..} executedOrdersProducer poolsProducer = do
   (transactions, index) <- getAllTransactions
   let
     events =
@@ -71,8 +79,11 @@ process TrackerService{..} Cache{..} Logging{..} producer = do
         executedSwaps    = processExecutedOrder @ExecutedSwap  transactions
         executedDeposits = processExecutedOrder @ExecutedDeposit transactions
         executedRedeems  = processExecutedOrder @ExecutedRedeem transactions
+    pools = processPool transactions
   _ <- infoM $ "Events are: "  ++ (show (length events))
-  _ <- unless (null events) (produce producer (S.fromList events))
+  _ <- unless (null events) (produce executedOrdersProducer (S.fromList events))
+  _ <- infoM $ "Pools are: "  ++ (show (length pools))
+  _ <- unless (null pools) (produce poolsProducer (S.fromList pools))
   putLastIndex index
 
 constantKafkaKey :: String
@@ -88,4 +99,27 @@ processExecutedOrder inputs =
           _          -> Nothing
         ) inputs
   in unNone ordersMaybe
-    
+
+processPool :: [SettledTx] -> [(String, PoolEvent)]
+processPool transactions =
+  let
+    poolsMaybe = transactions >>= (\SettledTx{outputs, timestamp} ->
+        fmap (\out -> case parseFromLedger @Pool out of
+            Just (OnChain _ Pool{..}) ->
+              let
+                pool = Interop.Pool
+                  { id            = wrap poolId
+                  , reservesX     = poolReservesX
+                  , reservesY     = poolReservesY
+                  , liquidity     = poolLiquidity 
+                  , x             = wrap poolCoinX 
+                  , y             = wrap poolCoinY 
+                  , lq            = wrap poolCoinLq 
+                  , fee           = poolFee 
+                  , outCollateral = outCollateral
+                  } 
+              in Just ((show $ poolId), PoolEvent pool timestamp)
+            _ -> Nothing
+          ) outputs
+      )
+  in unNone poolsMaybe

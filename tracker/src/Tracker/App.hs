@@ -29,12 +29,13 @@ mkApp = return $ App wire
 
 wire :: (MonadUnliftIO f, MonadCatch f, S.MonadAsync f, MonadMask f) => f ()
 wire = runResourceT $ do
-  AppConfig {..}   <- lift $ read mkConfigReader
+  AppConfig{..}    <- lift $ read mkConfigReader
   loggingMaker     <- makeLogging loggingConfig
   ordersProducer   <- mkKafkaProducer ordersProducerConfig (TopicName ordersTopicName)
+  poolsProducer    <- mkKafkaProducer poolsProducerConfig (TopicName poolsTopicName)
   trackerCache     <- mkCache redisSettings loggingMaker
   let
     explorer        = mkExplorer explorerConfig
   trackerService  <- mkTrackerService trackerSettings retry loggingMaker trackerCache explorer
-  trackerProgramm <- mkTrackerProgram trackerProgrammConfig loggingMaker trackerCache trackerService ordersProducer
+  trackerProgramm <- mkTrackerProgram trackerProgrammConfig loggingMaker trackerCache trackerService ordersProducer poolsProducer
   lift $ run trackerProgramm

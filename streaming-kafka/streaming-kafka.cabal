@@ -77,7 +77,6 @@ library
                      Streaming.Config
                      Streaming.Class
                      Streaming.Types
-                     Streaming.Events
                      Streaming.Throw
 
     build-depends:  bytestring
