@@ -115,7 +115,7 @@ processPool transactions =
                   , x             = wrap poolCoinX 
                   , y             = wrap poolCoinY 
                   , lq            = wrap poolCoinLq 
-                  , fee           = poolFee 
+                  , fee           = wrap poolFee 
                   , outCollateral = outCollateral
                   } 
               in Just ((show $ poolId), PoolEvent pool timestamp)

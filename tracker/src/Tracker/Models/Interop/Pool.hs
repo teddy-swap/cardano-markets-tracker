@@ -15,13 +15,13 @@ import ErgoDex.Class
 import ErgoDex.Types
 
 data Pool = Pool
-  { id        :: AssetClassWrapper
-  , reservesX :: Amount X
-  , reservesY :: Amount Y
-  , liquidity :: Amount Liquidity
-  , x         :: AssetClassWrapper
-  , y         :: AssetClassWrapper
-  , lq        :: AssetClassWrapper
-  , fee       :: PoolFee
+  { id            :: AssetClassWrapper
+  , reservesX     :: Amount X
+  , reservesY     :: Amount Y
+  , liquidity     :: Amount Liquidity
+  , x             :: AssetClassWrapper
+  , y             :: AssetClassWrapper
+  , lq            :: AssetClassWrapper
+  , fee           :: PoolFeeWrapper
   , outCollateral :: Amount Lovelace
   } deriving (Show, Eq, Generic, FromJSON, ToJSON)

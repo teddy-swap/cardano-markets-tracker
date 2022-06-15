@@ -46,7 +46,7 @@ getAllTransactions'
 getAllTransactions' Explorer{..} Cache{..} l@Logging{..} TrackerSettings{..} retry = do
   _ <- infoM @String "Going to get next tracker iteration."
   lastIndex <- getLastIndex
-  Items{..} <- execWithRetry l retry "Retrying getTxn." (getTxs (Paging lastIndex (naturalToInt limit)) Desc)
+  Items{..} <- execWithRetry l retry "Retrying getTxn." (getTxs (Paging lastIndex (naturalToInt limit)) Asc)
   _ <- infoM $ "Got next txn batch: " ++ (show $ length items)
   let 
     cardanoTxn = fmap mkFromExplorer items

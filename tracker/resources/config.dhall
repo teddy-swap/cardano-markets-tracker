@@ -15,7 +15,7 @@ in
     , producerTimeout = 1000
     },
   ordersTopicName = "orders-topic",
-  poolsTopicName = "pools-topic",
+  poolsTopicName = "pools-topic-name",
   trackerProgrammConfig =
     { pollTime = 2
     },
