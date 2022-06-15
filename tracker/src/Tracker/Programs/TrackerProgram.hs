@@ -105,7 +105,7 @@ processPool transactions =
   let
     poolsMaybe = transactions >>= (\SettledTx{outputs, timestamp} ->
         fmap (\out -> case parseFromLedger @Pool out of
-            Just (OnChain _ Pool{..}) ->
+            Just (OnChain out Pool{..}) ->
               let
                 pool = Interop.Pool
                   { id            = wrap poolId
@@ -118,7 +118,7 @@ processPool transactions =
                   , fee           = wrap poolFee 
                   , outCollateral = outCollateral
                   } 
-              in Just ((show $ poolId), PoolEvent pool timestamp)
+              in Just ((show $ poolId), PoolEvent pool timestamp (fullTxOutRef out))
             _ -> Nothing
           ) outputs
       )
