@@ -7,9 +7,10 @@ import Tracker.Syntax.Option
 import Tracker.Models.ExecutedOrders
 import Tracker.Models.SettledTx
 import qualified Tracker.Models.Interop.Pool as Interop
-import Tracker.Models.Events.ExecutedOrderEvent
 import Tracker.Models.Events.PoolEvent
 import Tracker.Models.Interop.Class
+import Tracker.Models.Events.AnyEOrder
+import Tracker.Models.Events.Class
 
 import Streaming.Producer
 import Streaming.Types
@@ -40,7 +41,7 @@ mkTrackerProgram
   -> MakeLogging i f
   -> Cache f
   -> TrackerService f
-  -> Producer f String ExecutedOrderEvent
+  -> Producer f String AnyEOrder
   -> Producer f String PoolEvent
   -> i (TrackerProgram f)
 mkTrackerProgram settings MakeLogging{..} cache tracker executedOrdersProducer poolsProducer = do
@@ -53,7 +54,7 @@ run'
   -> Logging f
   -> Cache f
   -> TrackerService f
-  -> Producer f String ExecutedOrderEvent
+  -> Producer f String AnyEOrder
   -> Producer f String PoolEvent
   -> f ()
 run' TrackerProgrammConfig{..} logging@Logging{..} cache service executedOrdersProducer poolsProducer =
@@ -67,7 +68,7 @@ process
   => TrackerService f
   -> Cache f
   -> Logging f
-  -> Producer f String ExecutedOrderEvent
+  -> Producer f String AnyEOrder
   -> Producer f String PoolEvent
   -> f ()
 process TrackerService{..} Cache{..} Logging{..} executedOrdersProducer poolsProducer = do
@@ -83,19 +84,19 @@ process TrackerService{..} Cache{..} Logging{..} executedOrdersProducer poolsPro
   _ <- infoM $ "Events are: "  ++ (show (length events))
   _ <- unless (null events) (produce executedOrdersProducer (S.fromList events))
   _ <- infoM $ "Pools are: "  ++ (show (length pools))
-  _ <- unless (null pools) (produce poolsProducer (S.fromList pools))
+  -- _ <- unless (null pools) (produce poolsProducer (S.fromList pools))
   putLastIndex index
 
 constantKafkaKey :: String
 constantKafkaKey = "kafka_key"
 
-processExecutedOrder :: forall b. (FromExplorer SettledTx b, ToJSON b) => [SettledTx] -> [(String, ExecutedOrderEvent)]
+processExecutedOrder :: forall b. (FromExplorer SettledTx b, MakeAnyOrder b AnyEOrder) => [SettledTx] -> [(String, AnyEOrder)]
 processExecutedOrder inputs =
   let 
     ordersMaybe = 
       fmap (\elem ->
         case parseFromExplorer elem :: Maybe b of
-          Just order -> Just $ (constantKafkaKey, ExecutedOrderEvent $ C.unpack $ encode order)
+          Just order -> Just $ (constantKafkaKey, make order)
           _          -> Nothing
         ) inputs
   in unNone ordersMaybe
