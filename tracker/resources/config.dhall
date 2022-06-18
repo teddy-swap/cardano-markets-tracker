@@ -10,7 +10,12 @@ in
     { producerBrokers = ["127.0.0.1:9092"]
     , producerTimeout = 1000
     },
+  poolsProducerConfig =
+    { producerBrokers = ["127.0.0.1:9092"]
+    , producerTimeout = 1000
+    },
   ordersTopicName = "orders-topic",
+  poolsTopicName = "pools-topic-name",
   trackerProgrammConfig =
     { pollTime = 2
     },

@@ -16,7 +16,7 @@ import qualified Tracker.Models.Interop.Orders as Interop
 import           Tracker.Models.Interop.Class
 import           Tracker.Models.Interop.Wrappers 
 
-import           Data.Aeson (FromJSON, ToJSON)
+import           Data.Aeson
 import qualified PlutusTx.Prelude as P    
 import           Ledger           
 import           GHC.Generics                (Generic)

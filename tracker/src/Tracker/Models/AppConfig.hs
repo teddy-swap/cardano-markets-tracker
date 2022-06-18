@@ -34,7 +34,9 @@ instance FromDhall RetryConfig
 data AppConfig = AppConfig
   { explorerConfig        :: ExplorerConfig
   , ordersProducerConfig  :: KafkaProducerConfig
+  , poolsProducerConfig   :: KafkaProducerConfig
   , ordersTopicName       :: Text
+  , poolsTopicName        :: Text
   , trackerProgrammConfig :: TrackerProgrammConfig
   , trackerSettings       :: TrackerSettings
   , redisSettings         :: RedisSettings

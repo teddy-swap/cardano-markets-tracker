@@ -2,10 +2,10 @@ module Tracker.Models.Interop.Orders where
 
 import Tracker.Models.Interop.Wrappers
 
-import           Data.Aeson   (FromJSON, ToJSON)
-import           Ledger           
-import           GHC.Generics (Generic)
-import           RIO
+import Data.Aeson   (FromJSON, ToJSON)
+import Ledger           
+import GHC.Generics (Generic)
+import RIO
 
 import ErgoDex.Amm.Orders
 import ErgoDex.Contracts.Types as Currencies

@@ -89,6 +89,10 @@ library
                      Tracker.Models.Interop.Wrappers
                      Tracker.Models.Interop.Class
                      Tracker.Models.Interop.Orders
+                     Tracker.Models.Interop.Pool
+                     Tracker.Models.Events.PoolEvent
+                     Tracker.Models.Events.AnyEOrder
+                     Tracker.Models.Events.Class
 
     build-depends:  hashable        == 1.3.0.0
                   , dex-core        == 0.1.0.0

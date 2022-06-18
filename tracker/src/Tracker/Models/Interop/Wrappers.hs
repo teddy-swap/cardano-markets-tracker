@@ -62,3 +62,15 @@ instance CardanoWrapper AssetEntry AssetAmountWrapper where
         { asset  = wrap $ RIO.fst pair
         , amount = RIO.snd pair
         }
+
+data PoolFeeWrapper = PoolFeeWrapper
+  { poolFeeNum :: Integer
+  , poolFeeDen :: Integer
+  } deriving (Show, Eq, Generic, FromJSON, ToJSON)
+
+instance CardanoWrapper PoolFee PoolFeeWrapper where
+  wrap (PoolFee poolFeeNum poolFeeDen) =
+      PoolFeeWrapper 
+        { poolFeeNum = poolFeeNum
+        , poolFeeDen = poolFeeDen
+        }
