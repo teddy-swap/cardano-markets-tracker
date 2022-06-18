@@ -84,7 +84,7 @@ process TrackerService{..} Cache{..} Logging{..} executedOrdersProducer poolsPro
   _ <- infoM $ "Events are: "  ++ (show (length events))
   _ <- unless (null events) (produce executedOrdersProducer (S.fromList events))
   _ <- infoM $ "Pools are: "  ++ (show (length pools))
-  -- _ <- unless (null pools) (produce poolsProducer (S.fromList pools))
+  _ <- unless (null pools) (produce poolsProducer (S.fromList pools))
   putLastIndex index
 
 constantKafkaKey :: String
