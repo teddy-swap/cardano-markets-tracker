@@ -17,6 +17,7 @@ data SettledTx = SettledTx
   , hash        :: TxHash
   , inputs      :: [Tx.FullTxIn]
   , outputs     :: [Tx.FullTxOut]
+  , timestamp   :: Integer
   } deriving (Show, Eq, Generic, FromJSON)
 
 mkFromExplorer :: FullTx -> SettledTx
@@ -28,4 +29,5 @@ mkFromExplorer FullTx{..} =
     , globalIndex = globalIndex
     , inputs      = fmap toCardanoTx inputs
     , outputs     = fmap toCardanoTx outputs
+    , timestamp   = timestamp
     } 

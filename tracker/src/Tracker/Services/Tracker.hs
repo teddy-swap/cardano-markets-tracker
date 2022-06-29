@@ -54,4 +54,3 @@ getAllTransactions' Explorer{..} Cache{..} l@Logging{..} TrackerSettings{..} ret
   _ <- infoM $ "New index is: " ++ show newIndex
   
   return (cardanoTxn, newIndex)
-

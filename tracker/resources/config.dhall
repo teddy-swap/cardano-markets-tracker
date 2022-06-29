@@ -10,7 +10,12 @@ in
     { producerBrokers = ["127.0.0.1:9092"]
     , producerTimeout = 1000
     },
+  poolsProducerConfig =
+    { producerBrokers = ["127.0.0.1:9092"]
+    , producerTimeout = 1000
+    },
   ordersTopicName = "orders-topic",
+  poolsTopicName = "pools-topic-name",
   trackerProgrammConfig =
     { pollTime = 2
     },
@@ -19,7 +24,7 @@ in
     , redisPort = "6379"
     },
   trackerSettings =
-    { limit = 10
+    { limit = 100
     },
   retry =
     { sleepTime = 1000000
