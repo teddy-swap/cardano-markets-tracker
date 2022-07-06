@@ -4,6 +4,7 @@ RUN apt update && apt upgrade -y \
   && apt install libsodium-dev -y \
   && apt install libnuma-dev -y \
   && apt install libffi-dev -y \
+  && apt install librdkafka-dev -y \
   && apt install curl -y;
 
 #Install previsous versions of libffi libs
@@ -15,5 +16,9 @@ RUN apt install libffi6 libffi7 -y
 WORKDIR /cardano-markets-tracker
 COPY temp-build/tracker-app /cardano-markets-tracker/
 COPY tracker/resources/config.dhall /etc/cardano-markets-tracker/
-EXPOSE 8082
-ENTRYPOINT /cardano-markets-tracker/tracker-app $0
+RUN mkdir ./logs
+RUN touch ./logs/tracker.log
+
+ENV ENV_CONFIG "/etc/cardano-markets-tracker/config.dhall"
+
+ENTRYPOINT /cardano-markets-tracker/tracker-app ${ENV_CONFIG}

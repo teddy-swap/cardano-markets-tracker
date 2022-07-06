@@ -2,8 +2,10 @@ module Main where
 
 import Tracker.App
 import RIO
+import System.Environment
 
 main :: IO ()
 main = do
-  app <- mkApp
+  args <- getArgs
+  app  <- mkApp args
   runApp app

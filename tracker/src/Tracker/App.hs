@@ -19,17 +19,18 @@ import qualified Streamly.Prelude as S
 import           Control.Monad.Trans.Resource
 import           Control.Monad.Catch
 import           Kafka.Producer
+import           RIO.List
 
 data App = App
   { runApp :: IO ()
   }
 
-mkApp :: IO App
-mkApp = return $ App wire
+mkApp :: [String] -> IO App
+mkApp args = return $ App $ wire args
 
-wire :: (MonadUnliftIO f, MonadCatch f, S.MonadAsync f, MonadMask f) => f ()
-wire = runResourceT $ do
-  AppConfig{..}    <- lift $ read mkConfigReader
+wire :: (MonadUnliftIO f, MonadCatch f, S.MonadAsync f, MonadMask f) => [String] -> f ()
+wire args = runResourceT $ do
+  AppConfig{..}    <- lift $ read $ mkConfigReader (headMaybe args)
   loggingMaker     <- makeLogging loggingConfig
   ordersProducer   <- mkKafkaProducer ordersProducerConfig (TopicName ordersTopicName)
   poolsProducer    <- mkKafkaProducer poolsProducerConfig (TopicName poolsTopicName)
