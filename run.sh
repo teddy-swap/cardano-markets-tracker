@@ -1,1 +1,6 @@
-docker run -v /etc/cardano-markets-tracker/config.dhall:/cardano-markets-tracker/tracker/resources/config.dhall -d timooxaaa/htracker-cardano:0.0.1
+docker run \
+    -v /home/apps/tracker-haskell/conf/env.dhall:/etc/cardano-markets-tracker/config.dhall \
+    --restart=always \
+    --network="dev" \
+    --name=htracker-haskell \
+    -d timooxaaa/htracker-cardano:0.0.1
