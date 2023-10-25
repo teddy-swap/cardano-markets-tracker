@@ -27,7 +27,7 @@ services:
     command:
       - redpanda
       - start
-      - --kafka-addr internal://redpanda-1:9092,external://redpanda-1:19092
+      - --kafka-addr internal://redpanda-1:9092,external://0.0.0.0:19092
       - --advertise-kafka-addr internal://redpanda-1:9092,external://redpanda-1:19092
       - --pandaproxy-addr internal://redpanda-1:8082,external://0.0.0.0:18082
       - --advertise-pandaproxy-addr internal://redpanda-1:8082,external://redpanda-1:18082
@@ -56,7 +56,7 @@ services:
     command:
       - redpanda
       - start
-      - --kafka-addr internal://redpanda-2:9092,external://redpanda-2:29092
+      - --kafka-addr internal://redpanda-2:9092,external://0.0.0.0:29092
       - --advertise-kafka-addr internal://redpanda-2:9092,external://redpanda-2:29092
       - --pandaproxy-addr internal://redpanda-2:8082,external://0.0.0.0:28082
       - --advertise-pandaproxy-addr internal://redpanda-2:8082,external://redpanda-2:28082
@@ -88,7 +88,7 @@ services:
     command:
       - redpanda
       - start
-      - --kafka-addr internal://redpanda-3:9092,external://redpanda-3:39092
+      - --kafka-addr internal://redpanda-3:9092,external://0.0.0.0:39092
       - --advertise-kafka-addr internal://redpanda-3:9092,external://redpanda-3:39092
       - --pandaproxy-addr internal://redpanda-3:8082,external://0.0.0.0:38082
       - --advertise-pandaproxy-addr internal://redpanda-3:8082,external://redpanda-3:38082
