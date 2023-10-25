@@ -25,4 +25,5 @@ jobs:
           tags: clarkteddyswap/cardano-markets-tracker:${{ github.sha }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+          build-args: git_commit_id=${{ github.sha }}
           platforms: linux/amd64
