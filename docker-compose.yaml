@@ -139,9 +139,9 @@ services:
       - 8080:8080
     depends_on:
       - redpanda-1
-  cardano-market-tracker:
+  cardano-markets-tracker:
     image: clarkteddyswap/cardano-markets-tracker
-    container_name: cardano-market-tracker
+    container_name: cardano-markets-tracker
     environment:
       - KAFKA_BROKERS="redpanda-1:19092"
       - START_SLOT=31541004
