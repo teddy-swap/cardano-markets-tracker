@@ -1,99 +1,159 @@
 version: '3'
-
-services:
-  zooV2:
-    image: zookeeper:3.4.9
-    hostname: zooV2
-    environment:
-      ZOO_MY_ID: 1
-      ZOO_PORT: 2181
-    volumes:
-      - "./kafka/zooV2/data:/data:rw"
-      - "./kafka/zooV2/datalog:/datalog:rw"
-    networks:
-      - kafka-network
-  kafkaV21:
-    image: confluentinc/cp-kafka:5.3.0
-    hostname: kafkaV21
-    links:
-      - zooV2
-    environment:
-      HOSTNAME_COMMAND: "docker info | grep ^Name: | cut -d' ' -f 2"
-      KAFKA_BROKER_ID: 1
-      KAFKA_REPLICATION_FACTOR: 3
-      KAFKA_LOG4J_LOGGERS: "kafka.controller=INFO,kafka.producer.async.DefaultEventHandler=INFO,state.change.logger=INFO"
-      KAFKA_ZOOKEEPER_CONNECT: "zooV2:2181"
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafkaV21:9092,CONNECTIONS_FROM_HOST://192.168.50.25:19091
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,CONNECTIONS_FROM_HOST:PLAINTEXT
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
-      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
-      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
-      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
-    ports:
-      - 19091:19091
-    volumes:
-      - "./kafka/kafkaV21/data:/var/lib/kafka/data:rw"
-    networks:
-      - kafka-network
-  kafkaV22:
-    image: confluentinc/cp-kafka:5.3.0
-    hostname: kafkaV22
-    links:
-      - zooV2
-    environment:
-      KAFKA_REPLICATION_FACTOR: 3
-      KAFKA_LOG4J_LOGGERS: "kafka.controller=INFO,kafka.producer.async.DefaultEventHandler=INFO,state.change.logger=INFO"
-      KAFKA_BROKER_ID: 2
-      KAFKA_ZOOKEEPER_CONNECT: "zooV2:2181"
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafkaV22:9092,CONNECTIONS_FROM_HOST://192.168.50.25:19092
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,CONNECTIONS_FROM_HOST:PLAINTEXT
-      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
-      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
-      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
-      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
-    ports:
-      - 19092:19092
-    volumes:
-      - "./kafka/kafkaV22/data:/var/lib/kafka/data:rw"
-    networks:
-      - kafka-network
-  kafkaV23:
-    image: confluentinc/cp-kafka:5.3.0
-    hostname: kafkaV23
-    links:
-      - zooV2
-    environment:
-      KAFKA_REPLICATION_FACTOR: 3
-      KAFKA_LOG4J_LOGGERS: "kafka.controller=INFO,kafka.producer.async.DefaultEventHandler=INFO,state.change.logger=INFO"
-      KAFKA_BROKER_ID: 3
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafkaV23:9092,CONNECTIONS_FROM_HOST://192.168.50.25:19093
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,CONNECTIONS_FROM_HOST:PLAINTEXT
-      KAFKA_ZOOKEEPER_CONNECT: "zooV2:2181"
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
-      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
-      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
-      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
-    ports:
-      - 19093:19093
-    volumes:
-      - "./kafka/kafkaV23/data:/var/lib/kafka/data:rw"
-    networks:
-      - kafka-network
-  kafka-ui:
-      image: provectuslabs/kafka-ui
-      container_name: kafka-ui
-      environment:
-        - DYNAMIC_CONFIG_ENABLED=true
-      ports:
-        - "8080:8080"
-      depends_on:
-        - kafkaV21
-        - kafkaV22
-        - kafkaV23
-      networks:
-        - kafka-network
-
+name: cardano-market-tracker
 networks:
-  kafka-network:
+  tracker_network:
     driver: bridge
+volumes:
+  redpanda-1:
+    driver: local
+    driver_opts:
+      o: bind
+      type: none
+      device: ./kafka/kafkaV21/data
+  redpanda-2:
+    driver: local
+    driver_opts:
+      o: bind
+      type: none
+      device: ./kafka/kafkaV22/data
+  redpanda-3:
+    driver: local
+    driver_opts:
+      o: bind
+      type: none
+      device: ./kafka/kafkaV23/data
+services:
+  redpanda-1:
+    command:
+      - redpanda
+      - start
+      - --kafka-addr internal://redpanda-1:9092,external://redpanda-1:19092
+      - --advertise-kafka-addr internal://redpanda-1:9092,external://redpanda-1:19092
+      - --pandaproxy-addr internal://redpanda-1:8082,external://0.0.0.0:18082
+      - --advertise-pandaproxy-addr internal://redpanda-1:8082,external://redpanda-1:18082
+      - --schema-registry-addr internal://redpanda-1:8081,external://0.0.0.0:18081
+      - --rpc-addr redpanda-1:33145
+      - --advertise-rpc-addr redpanda-1:33145
+      - --smp
+      - '1'
+      - --reserve-memory
+      - 0M
+      - --overprovisioned
+      - --node-id
+      - '1'
+    image: docker.redpanda.com/redpandadata/redpanda:v23.2.12
+    container_name: redpanda-1
+    volumes:
+      - redpanda-1:/var/lib/redpanda/data
+    networks:
+      - tracker_network
+    ports:
+      - 18081:18081
+      - 18082:18082
+      - 19092:19092
+      - 19644:9644
+  redpanda-2:
+    command:
+      - redpanda
+      - start
+      - --kafka-addr internal://redpanda-2:9092,external://redpanda-2:29092
+      - --advertise-kafka-addr internal://redpanda-2:9092,external://redpanda-2:29092
+      - --pandaproxy-addr internal://redpanda-2:8082,external://0.0.0.0:28082
+      - --advertise-pandaproxy-addr internal://redpanda-2:8082,external://redpanda-2:28082
+      - --schema-registry-addr internal://redpanda-2:8081,external://0.0.0.0:28081
+      - --rpc-addr redpanda-2:33145
+      - --advertise-rpc-addr redpanda-2:33145
+      - --smp
+      - '1'
+      - --reserve-memory
+      - 0M
+      - --overprovisioned
+      - --node-id
+      - '2'
+      - --seeds redpanda-1:33145
+    image: docker.redpanda.com/redpandadata/redpanda:v23.2.12
+    container_name: redpanda-2
+    volumes:
+      - redpanda-2:/var/lib/redpanda/data
+    networks:
+      - tracker_network
+    ports:
+      - 28081:28081
+      - 28082:28082
+      - 29092:29092
+      - 29644:9644
+    depends_on:
+      - redpanda-1
+  redpanda-3:
+    command:
+      - redpanda
+      - start
+      - --kafka-addr internal://redpanda-3:9092,external://redpanda-3:39092
+      - --advertise-kafka-addr internal://redpanda-3:9092,external://redpanda-3:39092
+      - --pandaproxy-addr internal://redpanda-3:8082,external://0.0.0.0:38082
+      - --advertise-pandaproxy-addr internal://redpanda-3:8082,external://redpanda-3:38082
+      - --schema-registry-addr internal://redpanda-3:8081,external://0.0.0.0:38081
+      - --rpc-addr redpanda-3:33145
+      - --advertise-rpc-addr redpanda-3:33145
+      - --smp
+      - '1'
+      - --reserve-memory
+      - 0M
+      - --overprovisioned
+      - --node-id
+      - '3'
+      - --seeds redpanda-1:33145
+    image: docker.redpanda.com/redpandadata/redpanda:v23.2.12
+    container_name: redpanda-3
+    volumes:
+      - redpanda-3:/var/lib/redpanda/data
+    networks:
+      - tracker_network
+    ports:
+      - 38081:38081
+      - 38082:38082
+      - 39092:39092
+      - 39644:9644
+    depends_on:
+      - redpanda-1
+  console:
+    container_name: redpanda-console
+    image: docker.redpanda.com/redpandadata/console:v2.3.1
+    networks:
+      - tracker_network
+    entrypoint: /bin/sh
+    command: -c 'echo "$$CONSOLE_CONFIG_FILE" > /tmp/config.yml; /app/console'
+    environment:
+      CONFIG_FILEPATH: /tmp/config.yml
+      CONSOLE_CONFIG_FILE: |
+        kafka:
+          brokers: ["redpanda-1:9092","redpanda-2:9092","redpanda-3:9092"]
+          schemaRegistry:
+            enabled: true
+            urls: ["http://redpanda-1:8081"]
+        redpanda:
+          adminApi:
+            enabled: true
+            urls: ["http://redpanda-1:9644"]
+    ports:
+      - 8080:8080
+    depends_on:
+      - redpanda-1
+  cardano-market-tracker:
+    image: clarkteddyswap/cardano-markets-tracker
+    container_name: cardano-market-tracker
+    environment:
+      - KAFKA_BROKERS="redpanda-1:19092"
+      - START_SLOT=31541004
+      - START_HASH="898157caf22b78e8757419f5a5869aaacb691fbdcee7d6d7b74e5c71172dd610"
+      - CARDANO_NODE_SOCKET_PATH="/ipc/node.socket"
+    volumes:
+      - ./config:/config
+      - ./scripts:/scripts
+      - /tmp:/ipc
+    networks:
+      - tracker_network
+    depends_on:
+      - redpanda-1
+      - redpanda-2
+      - redpanda-3
