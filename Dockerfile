@@ -67,6 +67,8 @@ COPY --from=cardano-markets-tracker /root/.local/bin/tracker-app /usr/local/bin/
 COPY ./config.dhall.template ./config.dhall.template
 COPY ./generate-config.sh ./generate-config.sh
 COPY ./entrypoint.sh /entrypoint.sh
+COPY ./scripts /scripts
+COPY ./config/cardano /config/cardano
 
 ENV KAFKA_BROKERS="redpanda-1:19092"
 ENV START_SLOT=31541004
