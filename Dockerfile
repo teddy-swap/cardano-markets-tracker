@@ -75,4 +75,4 @@ COPY ./scripts /scripts
 COPY ./config/cardano /config/cardano
 
 ENV CONFIG_PATH="./config.dhall.template"
-ENTRYPOINT ["/usr/local/bin/tracker-app", CONFIG_PATH]
+ENTRYPOINT /usr/local/bin/tracker-app $CONFIG_PATH
