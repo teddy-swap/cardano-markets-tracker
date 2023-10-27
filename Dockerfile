@@ -42,13 +42,13 @@ RUN export LD_LIBRARY_PATH=$(llvm-config --libdir):$LD_LIBRARY_PATH
 WORKDIR /root/src
 RUN git clone https://github.com/teddy-swap/cardano-markets-tracker.git
 WORKDIR /root/src/cardano-markets-tracker
-RUN git fetch --all --recurse-submodules --tags
 # Cache some dependencies
 RUN cabal update
 # Cache the build
 RUN cabal build all
 ARG git_commit_id='294c088bb2617261d62d1792432c15fcb63322fb'
 # ARG git_commit_id
+RUN git fetch --all --recurse-submodules --tags
 RUN git checkout ${git_commit_id}
 RUN cabal update
 RUN cabal build all
