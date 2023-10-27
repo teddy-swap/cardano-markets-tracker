@@ -74,9 +74,5 @@ COPY ./entrypoint.sh /entrypoint.sh
 COPY ./scripts /scripts
 COPY ./config/cardano /config/cardano
 
-ENV KAFKA_BROKERS="redpanda-1:19092"
-ENV START_SLOT=31541004
-ENV START_HASH="898157caf22b78e8757419f5a5869aaacb691fbdcee7d6d7b74e5c71172dd610"
-ENV CARDANO_NODE_SOCKET_PATH="/ipc/node.socket"
-
-ENTRYPOINT ["/bin/bash", "/entrypoint.sh"]
+ENV CONFIG_PATH="./config.dhall.template"
+ENTRYPOINT ["/usr/local/bin/tracker-app", CONFIG_PATH]
