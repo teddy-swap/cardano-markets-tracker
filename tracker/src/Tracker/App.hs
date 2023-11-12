@@ -109,7 +109,7 @@ import ErgoDex.Amm.Pool
 import ErgoDex.ScriptsValidators
   ( ScriptsValidators, mkScriptsValidators, ScriptsConfig, parsePool )
 import Tracker.Models.AppConfig
-import Cardano.Api (SlotNo)
+import Cardano.Api (SlotNo (unSlotNo))
 import Tracker.Models.OnChainEvent (OnChainEvent (OnChainEvent))
 import Spectrum.EventSource.Persistence.Config (LedgerStoreConfig)
 
@@ -237,8 +237,11 @@ processMempoolTxEvents logging txEventsStream mempoolOrdersProducer =
 
 updateCursorFile :: FilePath -> SlotNo -> Maybe P.BlockId -> IO ()
 updateCursorFile filePath slotNo maybeBlockId = do
-  let slotHashString = show slotNo ++ "," ++ maybe "" show maybeBlockId
-  writeFile filePath slotHashString
+    let slotNoStr = show $ unSlotNo slotNo  -- Extract the numerical value
+    let maybeHashStr = maybe "" show maybeBlockId
+    let slotHashString = slotNoStr ++ "," ++ maybeHashStr
+    writeFile filePath slotHashString
+
 
 extractSlotAndHash :: TxEvent ctx -> (SlotNo, Maybe P.BlockId)
 extractSlotAndHash (PendingTx (MinimalMempoolTx minTx)) = 
