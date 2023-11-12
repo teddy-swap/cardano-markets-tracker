@@ -121,6 +121,10 @@ library
                   , contra-tracer
                   , serialise
                   , unix
+                  , directory
+                  , cardano-crypto-wrapper
+                  , ouroboros-consensus
+                  , ouroboros-consensus-cardano
 
 executable tracker-app
     main-is: Main.hs

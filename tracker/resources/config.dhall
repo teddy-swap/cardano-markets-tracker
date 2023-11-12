@@ -4,19 +4,19 @@ let fileHandlers = \(path : Text) -> \(level : LogLevel) -> {_1 = path, _2 = lev
 let levelOverride = \(component : Text) -> \(level : LogLevel) -> {_1 = component, _2 = level}
 in
 { txEventsProducerConfig =
-    { producerBrokers = ["192.168.50.25:19092"]
+    { producerBrokers = ["redpanda-1:19092"]
     , producerTimeout = 1000
     },
   ordersProducerConfig =
-    { producerBrokers = ["192.168.50.25:19092"]
+    { producerBrokers = ["redpanda-1:19092"]
     , producerTimeout = 1000
     },
   poolsProducerConfig =
-    { producerBrokers = ["192.168.50.25:19092"]
+    { producerBrokers = ["redpanda-1:19092"]
     , producerTimeout = 1000
     },
   mempoolOrdersProducerConfig =
-    { producerBrokers = ["192.168.50.25:19092"]
+    { producerBrokers = ["redpanda-1:19092"]
     , producerTimeout = 1000
     },  
   txEventsTopicName = "tx-events",
@@ -31,8 +31,8 @@ in
     },
   eventSourceConfig =
     { startAt =
-        { slot = 31425678
-        , hash = "3b6afd2b4c7827137455a70616ab1e3d90083055fa97b4be867f1e2ea4e1a04d"
+        { slot = 33096107
+        , hash = "f836a3cbe4a1d944ef252c9d1bc56ae23a8f021dd8090529dc7d3d1fada09ce8"
         }
     },
   nodeConfigPath = "/config/cardano/config.json",
@@ -41,7 +41,7 @@ in
     , createIfMissing = True
     },
   nodeSocketConfig =
-    { nodeSocketPath = "/tmp/node.socket"
+    { nodeSocketPath = "/ipc/node.socket"
     , maxInFlight    = 256
     },
   loggingConfig =
