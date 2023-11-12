@@ -18,6 +18,7 @@ import qualified Control.Concurrent.STM.TQueue  as STM
 import qualified Control.Concurrent.STM.TVar    as STM
 import qualified Control.Monad.STM              as STM
 import qualified Control.Concurrent.Async       as Async
+import qualified Ledger as P
 
 import Prelude hiding (read)
 
@@ -211,6 +212,11 @@ processTxEvents logging scriptsValidators txEventsStream txEventsProducer orders
       produce txEventsProducer (S.fromList [(mkKafkaKey txEvent, txEvent)])
       parseOrders logging txEvent >>= write2Kafka ordersProducer
       parsePools  logging scriptsValidators txEvent >>= write2Kafka poolProducer
+
+      -- Extract slot and hash from TxEvent and update the cursor file
+      let (slot, maybeHash) = extractSlotAndHash txEvent
+      liftIO $ updateCursorFile "/tmp/cursor" slot maybeHash
+
     ) txEventsStream
 
 processMempoolTxEvents
@@ -228,6 +234,21 @@ processMempoolTxEvents logging txEventsStream mempoolOrdersProducer =
   S.mapM (\txEvent -> do
       parseOrders logging txEvent >>= write2Kafka mempoolOrdersProducer
     ) txEventsStream
+
+updateCursorFile :: FilePath -> SlotNo -> Maybe P.BlockId -> IO ()
+updateCursorFile filePath slotNo maybeBlockId = do
+  let slotHashString = show slotNo ++ "," ++ maybe "" show maybeBlockId
+  writeFile filePath slotHashString
+
+extractSlotAndHash :: TxEvent ctx -> (SlotNo, Maybe P.BlockId)
+extractSlotAndHash (PendingTx (MinimalMempoolTx minTx)) = 
+    let MinimalUnconfirmedTx { slotNo = slot } = minTx
+    in (slot, Nothing)
+extractSlotAndHash (AppliedTx (MinimalLedgerTx minTx))  = 
+    let MinimalConfirmedTx { slotNo = slot, blockId = hash } = minTx
+    in (slot, Just hash)
+extractSlotAndHash _ = 
+    (0, Nothing) -- Handle other cases as appropriate
 
 write2Kafka :: (Monad m) => Producer m String (OnChainEvent a) -> [OnChainEvent a] -> m ()
 write2Kafka producer = produce producer . S.fromList . mkKafkaTuple
