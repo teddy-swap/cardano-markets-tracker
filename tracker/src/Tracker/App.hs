@@ -322,9 +322,12 @@ processTxEvents logging scriptsValidators txEventsStream txEventsProducer orders
         parseOrders logging txEvent >>= write2Kafka ordersProducer
         parsePools logging scriptsValidators txEvent >>= write2Kafka poolProducer
 
-        -- Extract slot and hash from TxEvent and update the cursor file
-        let (slot, maybeHash) = extractSlotAndHash txEvent
-        liftIO $ updateCursorFile cursorFilePath slot maybeHash
+         -- Update the cursor file only for confirmed transactions
+        case txEvent of
+          AppliedTx (MinimalLedgerTx minTx) -> do
+            let MinimalConfirmedTx {slotNo = slot, blockId = hash} = minTx
+            liftIO $ updateCursorFile cursorFilePath slot (Just hash)
+          _ -> return ()  -- Skip cursor update for other types of transactions
     )
     txEventsStream
 
@@ -351,16 +354,6 @@ updateCursorFile filePath slotNo maybeBlockId = do
   let maybeHashStr = maybe "" show maybeBlockId
   let slotHashString = slotNoStr ++ "," ++ maybeHashStr
   writeFile filePath slotHashString
-
-extractSlotAndHash :: TxEvent ctx -> (SlotNo, Maybe P.BlockId)
-extractSlotAndHash (PendingTx (MinimalMempoolTx minTx)) =
-  let MinimalUnconfirmedTx {slotNo = slot} = minTx
-   in (slot, Nothing)
-extractSlotAndHash (AppliedTx (MinimalLedgerTx minTx)) =
-  let MinimalConfirmedTx {slotNo = slot, blockId = hash} = minTx
-   in (slot, Just hash)
-extractSlotAndHash _ =
-  (0, Nothing) -- Handle other cases as appropriate
 
 oneEraHashFromString :: T.Text -> Either String (OneEraHash (CardanoEras crypto))
 oneEraHashFromString =
