@@ -140,17 +140,14 @@ services:
     depends_on:
       - redpanda-1
   cardano-markets-tracker:
-    image: clarkteddyswap/cardano-markets-tracker
+    image: test-markets-tracker
     container_name: cardano-markets-tracker
     environment:
-      - KAFKA_BROKERS="redpanda-1:19092"
-      - START_SLOT=31541004
-      - START_HASH="898157caf22b78e8757419f5a5869aaacb691fbdcee7d6d7b74e5c71172dd610"
-      - CARDANO_NODE_SOCKET_PATH="/ipc/node.socket"
+      - CONFIG_PATH=/etc/config/config.dhall
     volumes:
-      - ./config:/config
-      - ./scripts:/scripts
       - /tmp:/ipc
+      - ./tracker/resources:/etc/config
+      - ./data:/data
     networks:
       - tracker_network
     depends_on:
