@@ -23,7 +23,7 @@ RUN ghcup -v install ghc ${GHC} && \
 RUN ghcup set ghc $GHC
 RUN ghcup set cabal $CABAL
 
-FROM haskell AS cardano-markets-tracker-build-cache
+FROM haskell AS cardano-markets-tracker
 
 # # Cardano haskell dependencies
 RUN git clone https://github.com/input-output-hk/libsodium
@@ -39,24 +39,6 @@ ENV PATH=/usr/lib/llvm-13/bin:$PATH
 RUN export CPLUS_INCLUDE_PATH=$(llvm-config --includedir):$CPLUS_INCLUDE_PATH
 RUN export LD_LIBRARY_PATH=$(llvm-config --libdir):$LD_LIBRARY_PATH
 
-WORKDIR /root/src
-RUN git clone https://github.com/teddy-swap/cardano-markets-tracker.git
-WORKDIR /root/src/cardano-markets-tracker
-# Cache some dependencies
-RUN cabal update
-# Cache the build
-RUN cabal build all
-
-FROM cardano-markets-tracker-build-cache AS cardano-markets-tracker
-ARG git_commit_id='294c088bb2617261d62d1792432c15fcb63322fb'
-# ARG git_commit_id
-RUN git fetch --all --recurse-submodules --tags
-RUN git checkout ${git_commit_id}
-RUN cabal update
-RUN cabal build all
-RUN mkdir -p ~/.local/bin
-RUN find ./dist-newstyle -name tracker-app -exec cp -p {} ~/.local/bin/ \;
-
 FROM ubuntu:22.04 AS cardano-markets-tracker-slim
 ARG DEBIAN_FRONTEND=noninteractive
 RUN apt-get update -y && apt-get upgrade -y && apt-get install librocksdb-dev git liblzma-dev libnuma-dev curl automake build-essential pkg-config libffi-dev libgmp-dev libssl-dev libtinfo-dev libsystemd-dev zlib1g-dev make g++ tmux git jq wget libncursesw5 libtool autoconf libncurses-dev clang llvm-13 llvm-13-dev librdkafka-dev gettext -y
@@ -69,7 +51,9 @@ COPY --from=cardano-markets-tracker /usr/local/lib/pkgconfig/ /usr/local/lib/pkg
 RUN ln -s /usr/local/lib/libsodium.so.23.3.0 /usr/lib/libsodium.so.23
 RUN ldconfig
 
-COPY --from=cardano-markets-tracker /root/.local/bin/tracker-app /usr/local/bin/tracker-app
+WORKDIR /app
+COPY ./dist-newstyle /app/dist-newstyle
+RUN find ./dist-newstyle -name tracker-app -exec cp -p {} /usr/local/bin/ \;
 COPY ./config.dhall.template ./config.dhall.template
 COPY ./generate-config.sh ./generate-config.sh
 COPY ./entrypoint.sh /entrypoint.sh
