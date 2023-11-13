@@ -37,7 +37,7 @@ in
     },
   nodeConfigPath = "/config/cardano/config.json",
   lederStoreConfig =
-    { storePath       = "/data/amm-executor"
+    { storePath       = "/data"
     , createIfMissing = True
     },
   nodeSocketConfig =
