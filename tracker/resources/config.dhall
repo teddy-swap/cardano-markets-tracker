@@ -35,7 +35,7 @@ in
         , hash = "328bac757d1b100c68e0fd8f346a1bd53ee415b94271b8b7353866a22063f7bf"
         }
     },
-  nodeConfigPath = "/config/cardano/config.json",
+  nodeConfigPath = "/config/cardano/mainnet/config.json",
   lederStoreConfig =
     { storePath       = "/data"
     , createIfMissing = True
