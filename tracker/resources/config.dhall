@@ -19,10 +19,10 @@ in
     { producerBrokers = ["redpanda-1:19092"]
     , producerTimeout = 1000
     },  
-  txEventsTopicName = "tx-events",
-  ordersTopicName = "orders-topic",
-  poolsTopicName = "pools-topic-name",
-  mempoolOrdersTopicName = "mempool-orders-topic",
+  txEventsTopicName = "mainnet-tx-events",
+  ordersTopicName = "mainnet-orders",
+  poolsTopicName = "mainnet-lq-pools",
+  mempoolOrdersTopicName = "mainnet-mempool-orders",
   scriptsConfig =
     { swapScriptPath    = "/scripts/swap.uplc"
     , depositScriptPath = "/scripts/deposit.uplc"
@@ -31,8 +31,8 @@ in
     },
   eventSourceConfig =
     { startAt =
-        { slot = 33096107
-        , hash = "f836a3cbe4a1d944ef252c9d1bc56ae23a8f021dd8090529dc7d3d1fada09ce8"
+        { slot = 109076993
+        , hash = "328bac757d1b100c68e0fd8f346a1bd53ee415b94271b8b7353866a22063f7bf"
         }
     },
   nodeConfigPath = "/config/cardano/config.json",
